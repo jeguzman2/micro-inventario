@@ -83,3 +83,8 @@ def buscar(nombre: str):
 
     return lista
 
+#Health check
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
