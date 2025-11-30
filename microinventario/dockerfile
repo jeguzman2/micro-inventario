@@ -1,0 +1,17 @@
+FROM python:3.10
+
+# Directorio dentro del contenedor
+WORKDIR /app
+
+# Copiar requisitos e instalarlos
+COPY requirements.txt /app
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el código
+COPY . /app
+
+# Exponer el puerto para App Runner
+EXPOSE 8080
+
+# Comando de ejecución
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
