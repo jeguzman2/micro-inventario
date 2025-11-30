@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from pymongo import MongoClient
 from bson import ObjectId
 import os
-
+from dotenv import load_dotenv
 # Crea la app FastAPI
+load_dotenv()
+MONGO_URL = os.getenv("MONGO_URL")
 app = FastAPI()
 
 
@@ -13,7 +15,7 @@ app = FastAPI()
 # Si estás local → pon tu propia URL:
 # MONGO_URL = "mongodb://localhost:27017/"
 
-MONGO_URL = "mongodb+srv://provesi_user:123@cluster0.oj30l9o.mongodb.net/?appName=Cluster0"
+
 
 client = MongoClient(MONGO_URL)
 db = client["provesi"]
@@ -66,7 +68,7 @@ def update_stock(id: str, body: dict):
 
 
 # Buscar por nombre
-@app.get("/inventarios/buscar")
+@app.get("/inventarios/buscar/nombre")
 def buscar(nombre: str):
     print(nombre)
     resultados = productos.find({
