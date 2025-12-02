@@ -38,6 +38,36 @@ def home():
     return {"mensaje": "Inventario funcionando correctamente"}
 
 
+@app.post("/inventarios/crear")
+def crear_producto(body: dict):
+    try:
+        # Validar nombre
+        if "nombre" not in body:
+            raise ValidationError("Falta el campo 'nombre'.")
+        InputSanitizer.validate_nombre(body["nombre"])
+
+        # Validar stock
+        if "stock" not in body:
+            raise ValidationError("Falta el campo 'stock'.")
+        InputSanitizer.validate_stock(body["stock"])
+
+        # Construir documento
+        nuevo = {
+            "nombre": body["nombre"],
+            "stock": body["stock"]
+        }
+
+        # Insertar en Mongo
+        result = productos.insert_one(nuevo)
+
+        return {
+            "mensaje": "Producto creado",
+            "_id": str(result.inserted_id)
+        }
+
+    except ValidationError as e:
+        return {"error": str(e)}
+
 # Obtener producto por ID
 @app.get("/inventarios/detalle/{id}")
 def get_producto(id: str):
