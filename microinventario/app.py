@@ -5,7 +5,7 @@ from bson import ObjectId
 import os
 from dotenv import load_dotenv
 
-from microinventario.sanitizer import InputSanitizer
+from sanitizer import InputSanitizer
 # Crea la app FastAPI
 load_dotenv()
 MONGO_URL = os.getenv("MONGO_URL")
