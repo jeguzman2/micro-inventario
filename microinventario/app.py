@@ -1,8 +1,11 @@
 from fastapi import FastAPI
+from pydantic_core import ValidationError
 from pymongo import MongoClient
 from bson import ObjectId
 import os
 from dotenv import load_dotenv
+
+from microinventario.sanitizer import InputSanitizer
 # Crea la app FastAPI
 load_dotenv()
 MONGO_URL = os.getenv("MONGO_URL")
@@ -39,49 +42,73 @@ def home():
 @app.get("/inventarios/detalle/{id}")
 def get_producto(id: str):
     try:
+        InputSanitizer.validate_object_id(id)
+
         producto = productos.find_one({"_id": ObjectId(id)})
         if not producto:
             return {"error": "Producto no encontrado"}
-        
-        # Convertir ObjectId a string
+
         producto["_id"] = str(producto["_id"])
         return producto
-
-    except:
-        return {"error": "ID inválido"}
+    
+    except ValidationError as e:
+        return {"error": str(e)}
 
 
 # Actualizar stock
 @app.patch("/inventarios/actualizar/{id}/stock")
 def update_stock(id: str, body: dict):
-    if "stock" not in body:
-        return {"error": "Falta el campo 'stock'"}
-
     try:
+        # Validar ID
+        InputSanitizer.validate_object_id(id)
+
+        # Validar campo stock
+        if "stock" not in body:
+            raise ValidationError("Falta el campo 'stock'.")
+        
+        InputSanitizer.validate_stock(body["stock"])
+
         productos.update_one(
             {"_id": ObjectId(id)},
             {"$set": {"stock": body["stock"]}}
         )
+
         return {"mensaje": "Stock actualizado"}
-    except:
-        return {"error": "ID inválido"}
+    
+    except ValidationError as e:
+        return {"error": str(e)}
 
 
 # Buscar por nombre
 @app.get("/inventarios/buscar/nombre")
 def buscar(nombre: str):
-    print(nombre)
-    resultados = productos.find({
-        "nombre": {"$regex": f".*{nombre}.*", "$options": "i"}
-    })
+    try:
+        InputSanitizer.validate_nombre(nombre)
 
-    lista = []
-    
-    for prod in resultados:
-        prod["_id"] = str(prod["_id"])
-        lista.append(prod)
+        resultados = productos.find({
+            "nombre": {"$regex": f".*{nombre}.*", "$options": "i"}
+        })
 
-    return lista
+        lista = []
+        for prod in resultados:
+            prod["_id"] = str(prod["_id"])
+            lista.append(prod)
+
+        return lista
+
+    except ValidationError as e:
+        return {"error": str(e)}
+
+@app.get("/inventarios")
+def get_inventarios():
+    inventarios = []
+
+    for prod in productos.find():
+        prod["_id"] = str(prod["_id"])  # convertir ObjectId
+        inventarios.append(prod)
+
+    return inventarios
+
 
 #Health check
 @app.get("/health")
