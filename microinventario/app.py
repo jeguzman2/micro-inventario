@@ -145,6 +145,4 @@ def get_inventarios():
 def health():
     return {"status": "ok"}
 
-@app.get("/ready")
-def ready():
-    return {"status": "ready"}
+
